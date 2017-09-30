@@ -10,18 +10,28 @@ export function activate(context: vscode.ExtensionContext) {
         if (selection.isEmpty) {
             selection = getCurrentLineSelection(selection)
         }
-        const lines = getSelectLines(selection)
+        let lines = getSelectLines(selection)
         const startLine = lines[0]
-        const firstLineNumber = startLine.lineNumber
-        const endLine = lines[lines.length - 1]
+        let endLine = lines[lines.length - 1]
+        if (selection.end.character === 0) {
+            // if end selection is at the start of the last line, update selection to not include that line
+            await editor.edit(currentText => {
+                editor.selection = new vscode.Selection(
+                    new vscode.Position(startLine.lineNumber, 0),
+                    new vscode.Position(endLine.lineNumber-1, endLine.range.end.character)
+                );
+            });
+            selection = editor.selection
+            lines = getSelectLines(selection)
+            endLine = lines[lines.length - 1]
+        }
         await editor.edit(currentText => {
             currentText.replace(startLine.range.union(endLine.range), surroundWithIf(selection));
         });
         await editor.edit(currentText => {
-            const firstLine = editor.document.lineAt(firstLineNumber)
             editor.selection = new vscode.Selection(
-                new vscode.Position(firstLine.lineNumber, firstLine.firstNonWhitespaceCharacterIndex + 4),
-                new vscode.Position(firstLine.lineNumber, firstLine.firstNonWhitespaceCharacterIndex + 13)
+                new vscode.Position(startLine.lineNumber, startLine.firstNonWhitespaceCharacterIndex + 4),
+                new vscode.Position(startLine.lineNumber, startLine.firstNonWhitespaceCharacterIndex + 13)
             );
         });
     });
@@ -32,18 +42,30 @@ export function activate(context: vscode.ExtensionContext) {
         if (selection.isEmpty) {
             selection = getCurrentLineSelection(selection)
         }
-        const lines = getSelectLines(selection)
+        let lines = getSelectLines(selection)
         const startLine = lines[0]
-        const catchBodyLineNumber = lines.length + 2
-        const endLine = lines[lines.length - 1]
+        let endLine = lines[lines.length - 1]
+        if (selection.end.character === 0) {
+            // if end selection is at the start of the last line, update selection to not include that line
+            await editor.edit(currentText => {
+                editor.selection = new vscode.Selection(
+                    new vscode.Position(startLine.lineNumber, 0),
+                    new vscode.Position(endLine.lineNumber-1, endLine.range.end.character)
+                );
+            });
+            selection = editor.selection;
+            lines = getSelectLines(selection)
+            endLine = lines[lines.length - 1]
+        }
+        const catchBodyLineNumber = startLine.lineNumber + lines.length + 1
         await editor.edit(currentText => {
             currentText.replace(startLine.range.union(endLine.range), surroundWithTry(selection))
         });
         await editor.edit(currentText => {
             const catchLine = editor.document.lineAt(catchBodyLineNumber)
             editor.selection = new vscode.Selection(
-                new vscode.Position(catchLine.lineNumber, catchLine.firstNonWhitespaceCharacterIndex),
-                new vscode.Position(catchLine.lineNumber, catchLine.firstNonWhitespaceCharacterIndex + catchLine.text.length)
+                new vscode.Position(catchLine.lineNumber, catchLine.firstNonWhitespaceCharacterIndex + 9),
+                new vscode.Position(catchLine.lineNumber, catchLine.firstNonWhitespaceCharacterIndex + 14)
             );
         });
     });
