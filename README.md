@@ -2,6 +2,10 @@
 
 Surround selection with `if`, `try-catch`
 
+## Purpose of this Repo
+
+I like the surround plugin created by JuoCode but I discovered that it had several bugs that I chose to fix. I submitted a PR a long time ago but it was never merged. It appears that the plugin is no longer supported. To use my "fixed" version, follow the installation instructions below.
+
 ## Installing
 
 The parent of this extension is available for free in the Visual Studio Code Marketplace
